@@ -1,7 +1,7 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -12,13 +12,14 @@ const timeout = 5 * time.Second
 
 func main() {
 	if len(os.Args) < 2 {
-		log.Printf("Usage: %s URL\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s URL\n", os.Args[0])
 		os.Exit(1)
 	}
 
 	parsedUrl, err := url.Parse(os.Args[1])
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		os.Exit(1)
 	}
 
 	address := parsedUrl.Host
@@ -26,12 +27,10 @@ func main() {
 		address = os.Args[1]
 	}
 
-	log.Printf("Waiting for TCP connection to %s...\n", address)
-
-	_, err = net.DialTimeout("tcp", address, timeout)
-	if err != nil {
-		log.Println(err)
+	fmt.Fprintf(os.Stdout, "Waiting for TCP connection to %s...\n", address)
+	if _, err := net.DialTimeout("tcp", address, timeout); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
-	log.Println("ok")
+	os.Exit(0)
 }
