@@ -27,8 +27,19 @@ func main() {
 		address = os.Args[1]
 	}
 
-	fmt.Fprintf(os.Stdout, "Waiting for TCP connection to %s...\n", address)
-	if _, err := net.DialTimeout("tcp", address, timeout); err != nil {
+	timeLeft := timeout
+	for timeLeft > 0 {
+		start := time.Now()
+		_, err = net.DialTimeout("tcp", address, timeLeft)
+		if err == nil {
+			break
+		}
+		// DialTimeout will error out immediately if it gets "connection
+		// refused" but we want to retry in that case.
+		time.Sleep(100 * time.Millisecond)
+		timeLeft -= time.Now().Sub(start)
+	}
+	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
